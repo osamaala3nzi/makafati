@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+{% block title %}إنشاء حساب — مكافأتي{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+  <div class="auth-card auth-card-wide">
+    <div class="auth-header">
+      <div class="auth-logo">🎓</div>
+      <h1>انضم إلى مكافأتي</h1>
+      <p>أنشئ حسابك وابدأ رحلتك المالية</p>
+    </div>
+
+    <form method="POST" class="auth-form">
+      <div class="form-row">
+        <div class="form-group">
+          <label>اسم المستخدم</label>
+          <div class="input-wrap">
+            <span class="input-icon">👤</span>
+            <input type="text" name="username" placeholder="مثال: أسامة" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>البريد الإلكتروني</label>
+          <div class="input-wrap">
+            <span class="input-icon">📧</span>
+            <input type="email" name="email" placeholder="example@email.com" required>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>كلمة المرور</label>
+          <div class="input-wrap">
+            <span class="input-icon">🔒</span>
+            <input type="password" name="password" id="pw" placeholder="6 أحرف على الأقل" required>
+            <button type="button" class="toggle-pw" onclick="togglePw(this)">👁</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>تأكيد كلمة المرور</label>
+          <div class="input-wrap">
+            <span class="input-icon">🔒</span>
+            <input type="password" name="confirm_password" id="pw2" placeholder="أعد كتابة كلمة المرور" required>
+          </div>
+        </div>
+      </div>
+
+      <!-- Student type cards -->
+      <div class="form-group">
+        <label>نمط حياتك الجامعي</label>
+        <div class="type-cards">
+          <label class="type-card">
+            <input type="radio" name="student_type" value="مع أهل" checked>
+            <div class="type-card-body">
+              <span class="type-icon">🏠</span>
+              <span class="type-name">مع أهل</span>
+              <span class="type-desc">تعيش مع عائلتك</span>
+            </div>
+          </label>
+          <label class="type-card">
+            <input type="radio" name="student_type" value="سكن جامعي">
+            <div class="type-card-body">
+              <span class="type-icon">🏢</span>
+              <span class="type-name">سكن جامعي</span>
+              <span class="type-desc">في مدينة الطلاب</span>
+            </div>
+          </label>
+          <label class="type-card">
+            <input type="radio" name="student_type" value="بسيارة">
+            <div class="type-card-body">
+              <span class="type-icon">🚗</span>
+              <span class="type-name">بسيارة</span>
+              <span class="type-desc">تتنقل بسيارتك</span>
+            </div>
+          </label>
+          <label class="type-card">
+            <input type="radio" name="student_type" value="يشتغل">
+            <div class="type-card-body">
+              <span class="type-icon">💼</span>
+              <span class="type-name">يشتغل</span>
+              <span class="type-desc">لديك دخل إضافي</span>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>قيمة مكافأتك الشهرية (ريال)</label>
+        <div class="input-wrap">
+          <span class="input-icon">💵</span>
+          <input type="number" name="monthly_reward" value="990" min="100" max="5000" step="10">
+        </div>
+        <small class="hint">المكافأة الافتراضية 990 ريال — عدّلها حسب حالتك</small>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-full">إنشاء الحساب ←</button>
+    </form>
+
+    <p class="auth-switch">عندك حساب؟ <a href="{{ url_for('login') }}">سجّل دخولك</a></p>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function togglePw(btn) {
+  const input = btn.previousElementSibling;
+  input.type = input.type === 'password' ? 'text' : 'password';
+  btn.textContent = input.type === 'password' ? '👁' : '🙈';
+}
+
+// Highlight selected type card
+document.querySelectorAll('.type-card input').forEach(radio => {
+  radio.addEventListener('change', () => {
+    document.querySelectorAll('.type-card').forEach(c => c.classList.remove('selected'));
+    radio.closest('.type-card').classList.add('selected');
+  });
+});
+document.querySelector('.type-card input:checked')?.closest('.type-card').classList.add('selected');
+</script>
+{% endblock %}

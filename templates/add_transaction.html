@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% block title %}مصروف جديد — مكافأتي{% endblock %}
+
+{% block content %}
+<div class="page-container">
+  <div class="page-header">
+    <a href="{{ url_for('dashboard') }}" class="back-link">← الرئيسية</a>
+    <h1>➕ تسجيل مصروف جديد</h1>
+  </div>
+
+  <div class="form-card">
+    <form method="POST" class="tx-form">
+
+      <!-- Category Picker -->
+      <div class="form-group">
+        <label>اختر التصنيف *</label>
+        <div class="cat-picker">
+          {% for cat in categories %}
+          <label class="cat-pick-item">
+            <input type="radio" name="category_id" value="{{ cat.id }}" {% if loop.first %}checked{% endif %}>
+            <div class="cat-pick-body" style="--cat-color: {{ cat.color }}">
+              <span class="cat-pick-icon">{{ cat.icon }}</span>
+              <span class="cat-pick-name">{{ cat.name }}</span>
+            </div>
+          </label>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Amount -->
+      <div class="form-group">
+        <label>المبلغ (ريال) *</label>
+        <div class="amount-wrap">
+          <input type="number" name="amount" class="amount-input" placeholder="0" min="0.5" step="0.5" required>
+          <span class="amount-unit">ر</span>
+        </div>
+        <!-- Quick amounts -->
+        <div class="quick-amounts">
+          <span class="quick-label">مبالغ سريعة:</span>
+          <button type="button" class="quick-btn" onclick="setAmount(5)">5</button>
+          <button type="button" class="quick-btn" onclick="setAmount(10)">10</button>
+          <button type="button" class="quick-btn" onclick="setAmount(20)">20</button>
+          <button type="button" class="quick-btn" onclick="setAmount(50)">50</button>
+          <button type="button" class="quick-btn" onclick="setAmount(100)">100</button>
+        </div>
+      </div>
+
+      <!-- Note -->
+      <div class="form-group">
+        <label>ملاحظة (اختياري)</label>
+        <div class="input-wrap">
+          <span class="input-icon">📝</span>
+          <input type="text" name="note" placeholder="مثال: غداء في الكافيتيريا">
+        </div>
+      </div>
+
+      <!-- Date -->
+      <div class="form-group">
+        <label>التاريخ *</label>
+        <div class="input-wrap">
+          <span class="input-icon">📅</span>
+          <input type="date" name="transaction_date" id="txDate" required>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <a href="{{ url_for('dashboard') }}" class="btn btn-outline">إلغاء</a>
+        <button type="submit" class="btn btn-primary">تسجيل المصروف ✅</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Set today as default date
+document.getElementById('txDate').value = new Date().toISOString().split('T')[0];
+
+// Quick amount buttons
+function setAmount(v) {
+  document.querySelector('input[name="amount"]').value = v;
+}
+
+// Highlight selected category
+document.querySelectorAll('.cat-pick-item input').forEach(r => {
+  r.addEventListener('change', () => {
+    document.querySelectorAll('.cat-pick-body').forEach(b => b.classList.remove('selected'));
+    r.nextElementSibling.classList.add('selected');
+  });
+});
+document.querySelector('.cat-pick-item input:checked')?.nextElementSibling.classList.add('selected');
+</script>
+{% endblock %}

@@ -1,0 +1,247 @@
+{% extends 'base.html' %}
+{% block title %}لوحة التحكم — مكافأتي{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+
+  <!-- Header -->
+  <div class="dash-header">
+    <div>
+      <h1 class="dash-title">أهلاً، {{ user.username }} 👋</h1>
+      <p class="dash-sub">{{ month_name }} {{ year }} — {{ user.student_type }}</p>
+    </div>
+    <a href="{{ url_for('add_transaction') }}" class="btn btn-primary">➕ مصروف جديد</a>
+  </div>
+
+  <!-- Danger Alert -->
+  {% if smart.danger %}
+  <div class="alert-danger">
+    <div class="alert-icon">⚠️</div>
+    <div class="alert-body">
+      <strong>تنبيه: مكافأتك في خطر!</strong>
+      <p>صرفت {{ smart.spent_pct }}% من ميزانيتك في {{ smart.time_pct }}% فقط من الشهر!</p>
+      <ul class="alert-tips">
+        <li>تجنب الوجبات الخارجية لمدة أسبوع</li>
+        <li>استخدم المواصلات العامة</li>
+        <li>أرجئ المشتريات غير الضرورية</li>
+      </ul>
+      <button class="btn btn-danger btn-sm" onclick="activateEmergency()">🚨 تفعيل وضع الطوارئ</button>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- KPI Cards -->
+  <div class="kpi-grid">
+    <div class="kpi-card kpi-blue">
+      <div class="kpi-icon">💰</div>
+      <div class="kpi-body">
+        <span class="kpi-label">المكافأة الشهرية</span>
+        <span class="kpi-value">{{ user.monthly_reward | int }} <small>ر</small></span>
+      </div>
+    </div>
+    <div class="kpi-card kpi-red">
+      <div class="kpi-icon">💸</div>
+      <div class="kpi-body">
+        <span class="kpi-label">المصروف</span>
+        <span class="kpi-value">{{ total_spent | int }} <small>ر</small></span>
+      </div>
+    </div>
+    <div class="kpi-card kpi-green">
+      <div class="kpi-icon">💚</div>
+      <div class="kpi-body">
+        <span class="kpi-label">المتبقي</span>
+        <span class="kpi-value">{{ remaining | int }} <small>ر</small></span>
+      </div>
+    </div>
+    <div class="kpi-card kpi-purple">
+      <div class="kpi-icon">📅</div>
+      <div class="kpi-body">
+        <span class="kpi-label">أيام متبقية</span>
+        <span class="kpi-value">{{ smart.days_remaining }} <small>يوم</small></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Progress Bar -->
+  <div class="progress-section card">
+    <div class="progress-header">
+      <span>تقدم الميزانية الشهرية</span>
+      <span class="progress-pct {% if smart.spent_pct > 80 %}text-red{% elif smart.spent_pct > 60 %}text-orange{% else %}text-green{% endif %}">
+        {{ smart.spent_pct }}%
+      </span>
+    </div>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar {% if smart.spent_pct > 80 %}bar-red{% elif smart.spent_pct > 60 %}bar-orange{% else %}bar-green{% endif %}"
+           style="width: {{ [smart.spent_pct, 100]|min }}%"></div>
+    </div>
+    <div class="progress-labels">
+      <span>{{ total_spent | int }} ر مصروف</span>
+      <span>{{ remaining | int }} ر متبقي</span>
+    </div>
+  </div>
+
+  <!-- Smart Prediction -->
+  <div class="smart-section card">
+    <h3 class="card-title">🔮 التحليل الذكي</h3>
+    <div class="smart-grid">
+      <div class="smart-item">
+        <span class="smart-icon">📈</span>
+        <div>
+          <div class="smart-label">معدل الصرف اليومي</div>
+          <div class="smart-val">{{ smart.daily_rate }} ر/يوم</div>
+        </div>
+      </div>
+      <div class="smart-item">
+        <span class="smart-icon">🎯</span>
+        <div>
+          <div class="smart-label">المتوقع بنهاية الشهر</div>
+          <div class="smart-val {% if smart.predicted_total > user.monthly_reward %}text-red{% else %}text-green{% endif %}">
+            {{ smart.predicted_total | int }} ر
+          </div>
+        </div>
+      </div>
+      <div class="smart-item">
+        <span class="smart-icon">⏰</span>
+        <div>
+          <div class="smart-label">المكافأة تكفي لـ</div>
+          <div class="smart-val {% if smart.days_until_empty < smart.days_remaining %}text-red{% else %}text-green{% endif %}">
+            {% if smart.days_until_empty >= 999 %}بقية الشهر ✅
+            {% else %}{{ smart.days_until_empty }} يوم أخرى{% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Grid: Chart + Transactions -->
+  <div class="main-grid">
+
+    <!-- Doughnut Chart -->
+    <div class="card chart-card">
+      <h3 class="card-title">📊 توزيع المصروفات</h3>
+      {% if spending_by_cat %}
+      <div class="chart-wrap">
+        <canvas id="spendingChart"></canvas>
+      </div>
+      <div class="chart-legend">
+        {% for item in spending_by_cat %}
+        <div class="legend-item">
+          <span class="legend-dot" style="background:{{ item.color }}"></span>
+          <span>{{ item.icon }} {{ item.name }}</span>
+          <span class="legend-val">{{ item.total | int }} ر</span>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="empty-state">
+        <p>📭 لا توجد مصروفات بعد</p>
+        <a href="{{ url_for('add_transaction') }}" class="btn btn-primary btn-sm">سجّل أول مصروف</a>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Recent Transactions -->
+    <div class="card">
+      <div class="card-header-row">
+        <h3 class="card-title">📋 آخر المصروفات</h3>
+        <a href="{{ url_for('add_transaction') }}" class="btn btn-outline btn-sm">+ إضافة</a>
+      </div>
+      {% if transactions %}
+      <div class="tx-list">
+        {% for tx in transactions %}
+        <div class="tx-item" id="tx-{{ tx.id }}">
+          <div class="tx-icon" style="background: {{ tx.color }}22; color: {{ tx.color }}">{{ tx.icon }}</div>
+          <div class="tx-body">
+            <div class="tx-cat">{{ tx.category_name }}</div>
+            <div class="tx-note">{{ tx.note or tx.transaction_date }}</div>
+          </div>
+          <div class="tx-amount">-{{ tx.amount | int }} ر</div>
+          <button class="tx-delete" onclick="deleteTx({{ tx.id }})" title="حذف">×</button>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="empty-state">
+        <p>📭 لا توجد مصروفات مسجّلة</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Budget Categories -->
+  <div class="card">
+    <h3 class="card-title">📂 تفاصيل الميزانية حسب التصنيف</h3>
+    <div class="cat-grid">
+      {% for bc in budget_cats %}
+      {% set pct = [((bc.spent_amount / bc.allocated_amount * 100) if bc.allocated_amount > 0 else 0), 100]|min %}
+      <div class="cat-item">
+        <div class="cat-header">
+          <span class="cat-icon" style="color: {{ bc.color }}">{{ bc.icon }}</span>
+          <span class="cat-name">{{ bc.name }}</span>
+          <span class="cat-spent">{{ bc.spent_amount | int }}/{{ bc.allocated_amount | int }} ر</span>
+        </div>
+        <div class="cat-bar-wrap">
+          <div class="cat-bar {% if pct > 90 %}bar-red{% elif pct > 70 %}bar-orange{% else %}bar-blue{% endif %}"
+               style="width: {{ pct }}%"></div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Achievements -->
+  {% if achievements %}
+  <div class="card">
+    <h3 class="card-title">🏆 إنجازاتي</h3>
+    <div class="badges-row">
+      {% for ach in achievements %}
+      <div class="badge-item" title="{{ ach.description }}">
+        <span class="badge-icon">{{ ach.badge_icon }}</span>
+        <span class="badge-name">{{ ach.badge_name.replace('_', ' ') }}</span>
+        <span class="badge-desc">{{ ach.description }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+
+<!-- Chart Data -->
+<script>
+const spendingData = {
+  labels: [{% for s in spending_by_cat %}'{{ s.name }}'{% if not loop.last %},{% endif %}{% endfor %}],
+  amounts: [{% for s in spending_by_cat %}{{ s.total | round(1) }}{% if not loop.last %},{% endif %}{% endfor %}],
+  colors: [{% for s in spending_by_cat %}'{{ s.color }}'{% if not loop.last %},{% endif %}{% endfor %}],
+};
+</script>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Render doughnut chart
+if (document.getElementById('spendingChart') && spendingData.labels.length > 0) {
+  renderDoughnut('spendingChart', spendingData.labels, spendingData.amounts, spendingData.colors);
+}
+
+// Delete transaction
+async function deleteTx(id) {
+  if (!confirm('حذف هذا المصروف؟')) return;
+  const res = await fetch(`/api/delete_transaction/${id}`, { method: 'DELETE' });
+  const data = await res.json();
+  if (data.success) {
+    document.getElementById(`tx-${id}`).style.opacity = '0';
+    setTimeout(() => { document.getElementById(`tx-${id}`)?.remove(); location.reload(); }, 300);
+  }
+}
+
+// Emergency mode
+async function activateEmergency() {
+  if (!confirm('تفعيل وضع الطوارئ سيخفض ميزانية الترفيه والملابس 50%. هل أنت متأكد؟')) return;
+  const res = await fetch('/api/emergency_mode', { method: 'POST' });
+  const data = await res.json();
+  alert(data.message);
+  location.reload();
+}
+</script>
+{% endblock %}

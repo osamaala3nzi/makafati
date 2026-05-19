@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}مكافأتي{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  {% block head %}{% endblock %}
+</head>
+<body>
+
+{% if session.user_id %}
+<nav class="navbar">
+  <div class="nav-container">
+    <a href="{{ url_for('dashboard') }}" class="nav-brand">
+      <span class="brand-icon">💰</span>
+      <span class="brand-text">مكافأتي</span>
+    </a>
+    <div class="nav-links">
+      <a href="{{ url_for('dashboard') }}" class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}">
+        <span>🏠</span> الرئيسية
+      </a>
+      <a href="{{ url_for('add_transaction') }}" class="nav-link {% if request.endpoint == 'add_transaction' %}active{% endif %}">
+        <span>➕</span> مصروف جديد
+      </a>
+      <a href="{{ url_for('goals') }}" class="nav-link {% if request.endpoint == 'goals' %}active{% endif %}">
+        <span>🎯</span> أهدافي
+      </a>
+      <a href="{{ url_for('logout') }}" class="nav-link logout-link">
+        <span>🚪</span> خروج
+      </a>
+    </div>
+    <button class="nav-toggle" id="navToggle">☰</button>
+  </div>
+</nav>
+{% endif %}
+
+<!-- Flash Messages -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <div class="flash-container">
+    {% for category, message in messages %}
+    <div class="flash flash-{{ category }}">
+      {{ '✅' if category == 'success' else '❌' }} {{ message }}
+      <button class="flash-close" onclick="this.parentElement.remove()">×</button>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+{% endwith %}
+
+<main class="main-content {% if not session.user_id %}no-nav{% endif %}">
+  {% block content %}{% endblock %}
+</main>
+
+<script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+<script>
+  // Auto-close flash after 4s
+  setTimeout(() => {
+    document.querySelectorAll('.flash').forEach(el => el.style.opacity = '0');
+    setTimeout(() => document.querySelectorAll('.flash').forEach(el => el.remove()), 400);
+  }, 4000);
+
+  // Mobile nav toggle
+  const toggle = document.getElementById('navToggle');
+  const navLinks = document.querySelector('.nav-links');
+  if (toggle) {
+    toggle.addEventListener('click', () => navLinks.classList.toggle('open'));
+  }
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block title %}تسجيل الدخول — مكافأتي{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+  <div class="auth-card">
+    <div class="auth-header">
+      <div class="auth-logo">💰</div>
+      <h1>مرحباً بعودتك</h1>
+      <p>سجّل دخولك لمتابعة مكافأتك</p>
+    </div>
+
+    <form method="POST" class="auth-form">
+      <div class="form-group">
+        <label>البريد الإلكتروني</label>
+        <div class="input-wrap">
+          <span class="input-icon">📧</span>
+          <input type="email" name="email" placeholder="example@email.com" required autocomplete="email">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>كلمة المرور</label>
+        <div class="input-wrap">
+          <span class="input-icon">🔒</span>
+          <input type="password" name="password" placeholder="••••••••" required>
+          <button type="button" class="toggle-pw" onclick="togglePw(this)">👁</button>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary btn-full">تسجيل الدخول</button>
+    </form>
+
+    <p class="auth-switch">ما عندك حساب؟ <a href="{{ url_for('register') }}">أنشئ حساباً مجانياً</a></p>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function togglePw(btn) {
+  const input = btn.previousElementSibling;
+  input.type = input.type === 'password' ? 'text' : 'password';
+  btn.textContent = input.type === 'password' ? '👁' : '🙈';
+}
+</script>
+{% endblock %}

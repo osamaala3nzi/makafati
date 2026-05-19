@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% block title %}مكافأتي — أدر مكافأتك بذكاء{% endblock %}
+
+{% block content %}
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-content">
+    <div class="hero-badge">🎓 للطلاب الجامعيين</div>
+    <h1 class="hero-title">أدر <span class="highlight">مكافأتك</span> بذكاء</h1>
+    <p class="hero-sub">منصة مكافأتي تساعدك تتحكم في 990 ريالك الشهري، تتتبع مصاريفك، وتحقق أهدافك المالية بسهولة.</p>
+    <div class="hero-actions">
+      <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg">ابدأ مجاناً ←</a>
+      <a href="{{ url_for('login') }}" class="btn btn-outline btn-lg">تسجيل الدخول</a>
+    </div>
+    <div class="hero-stats">
+      <div class="stat-item"><span class="stat-num">990</span><span class="stat-lbl">ريال شهرياً</span></div>
+      <div class="stat-divider"></div>
+      <div class="stat-item"><span class="stat-num">7</span><span class="stat-lbl">تصنيفات</span></div>
+      <div class="stat-divider"></div>
+      <div class="stat-item"><span class="stat-num">100%</span><span class="stat-lbl">مجاني</span></div>
+    </div>
+  </div>
+  <div class="hero-visual">
+    <div class="mock-card">
+      <div class="mock-header">
+        <span>💰</span>
+        <span>مكافأتي — مايو</span>
+      </div>
+      <div class="mock-amount">990 <small>ريال</small></div>
+      <div class="mock-bar-wrap">
+        <div class="mock-bar" style="width:62%"></div>
+      </div>
+      <div class="mock-row"><span>مصروف</span><span>613 ر</span></div>
+      <div class="mock-row green"><span>متبقي</span><span>377 ر</span></div>
+      <div class="mock-chips">
+        <span class="chip">🍔 أكل 200</span>
+        <span class="chip">🚗 مواصلات 150</span>
+        <span class="chip">📚 دراسة 80</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Features -->
+<section class="features">
+  <div class="container">
+    <h2 class="section-title">لماذا مكافأتي؟</h2>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">📊</div>
+        <h3>تتبع مصاريفك</h3>
+        <p>سجّل كل مصروف بضغطة واحدة ووزّعه على تصنيفات ذكية</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔮</div>
+        <h3>توقع ذكي</h3>
+        <p>يحسب معدل صرفك اليومي ويخبرك متى ستنتهي مكافأتك</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🎯</div>
+        <h3>أهداف ادخارية</h3>
+        <p>ضع هدفاً لابتوب أو رحلة واحسب كم شهر تحتاج</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🏆</div>
+        <h3>نظام إنجازات</h3>
+        <p>اكسب شارات عند التزامك بميزانيتك وتسجيل مصاريفك</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">⚠️</div>
+        <h3>تنبيه الخطر</h3>
+        <p>يحذرك فوراً إذا كنت على طريق الإنفاق الزائد مع اقتراحات</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🚨</div>
+        <h3>وضع الطوارئ</h3>
+        <p>زر واحد يقلص ميزانيات الترفيه والملابس لإنقاذ رصيدك</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <div class="container">
+    <h2>جاهز تبدأ؟</h2>
+    <p>انضم الآن وتحكم في مكافأتك من اليوم الأول</p>
+    <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg">إنشاء حساب مجاني</a>
+  </div>
+</section>
+
+<footer class="footer">
+  <p>مكافأتي © 2024 — مشروع تخرج طلابي</p>
+</footer>
+{% endblock %}

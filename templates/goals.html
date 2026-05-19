@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+{% block title %}أهدافي الادخارية — مكافأتي{% endblock %}
+
+{% block content %}
+<div class="page-container">
+  <div class="page-header">
+    <a href="{{ url_for('dashboard') }}" class="back-link">← الرئيسية</a>
+    <h1>🎯 أهدافي الادخارية</h1>
+  </div>
+
+  <!-- Add Goal Card -->
+  <div class="card goal-form-card">
+    <h3 class="card-title">➕ هدف جديد</h3>
+    <form method="POST" class="goal-form">
+      <input type="hidden" name="action" value="add">
+      <div class="form-row">
+        <div class="form-group">
+          <label>اسم الهدف *</label>
+          <div class="input-wrap">
+            <span class="input-icon">✏️</span>
+            <input type="text" name="title" placeholder="مثال: لابتوب، iPhone، رحلة" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>المبلغ المستهدف (ريال) *</label>
+          <div class="input-wrap">
+            <span class="input-icon">💵</span>
+            <input type="number" name="target_amount" placeholder="مثال: 2000" min="10" step="10" required>
+          </div>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>تاريخ الهدف (اختياري)</label>
+          <div class="input-wrap">
+            <span class="input-icon">📅</span>
+            <input type="date" name="target_date">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>أيقونة الهدف</label>
+          <div class="icon-picker">
+            {% for icon in ['🎯','💻','📱','✈️','🎮','📚','🚗','👟','🏠','💍'] %}
+            <label class="icon-opt">
+              <input type="radio" name="icon" value="{{ icon }}" {% if loop.first %}checked{% endif %}>
+              <span>{{ icon }}</span>
+            </label>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary">إضافة الهدف</button>
+    </form>
+  </div>
+
+  <!-- Goals List -->
+  {% if goals %}
+  <div class="goals-grid">
+    {% for g in goals %}
+    <div class="goal-card">
+      <div class="goal-top">
+        <div class="goal-icon-wrap">{{ g.icon }}</div>
+        <div class="goal-info">
+          <h3 class="goal-title">{{ g.title }}</h3>
+          <div class="goal-amounts">
+            <span class="saved">{{ g.saved_amount | int }} ر محفوظ</span>
+            <span class="separator">/</span>
+            <span class="target">{{ g.target_amount | int }} ر</span>
+          </div>
+        </div>
+        <form method="POST" style="margin:0">
+          <input type="hidden" name="action" value="delete">
+          <input type="hidden" name="goal_id" value="{{ g.id }}">
+          <button type="submit" class="goal-delete" onclick="return confirm('حذف هذا الهدف؟')">×</button>
+        </form>
+      </div>
+
+      <!-- Progress -->
+      <div class="goal-progress-wrap">
+        <div class="goal-progress-bar {% if g.pct >= 100 %}bar-green{% elif g.pct >= 60 %}bar-blue{% else %}bar-orange{% endif %}"
+             style="width: {{ g.pct }}%"></div>
+      </div>
+      <div class="goal-meta">
+        <span class="goal-pct">{{ g.pct }}%</span>
+        {% if g.pct >= 100 %}
+          <span class="goal-status done">🎉 اكتمل!</span>
+        {% else %}
+          <span class="goal-status">متبقي {{ g.remaining | int }} ر • ~{{ g.months_needed }} شهر</span>
+        {% endif %}
+      </div>
+
+      <!-- Add savings -->
+      {% if g.pct < 100 %}
+      <form method="POST" class="add-savings-form">
+        <input type="hidden" name="action" value="add_savings">
+        <input type="hidden" name="goal_id" value="{{ g.id }}">
+        <div class="savings-input-row">
+          <input type="number" name="amount" placeholder="أضف مدخرات..." min="1" step="1" class="savings-input">
+          <button type="submit" class="btn btn-green btn-sm">إضافة</button>
+        </div>
+      </form>
+      {% endif %}
+
+      {% if g.target_date %}
+      <div class="goal-date">📅 الهدف بحلول {{ g.target_date }}</div>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="card empty-state">
+    <div style="font-size:3rem">🎯</div>
+    <p>ما عندك أهداف بعد — أضف هدفك الأول!</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Highlight selected icon
+document.querySelectorAll('.icon-opt input').forEach(r => {
+  r.addEventListener('change', () => {
+    document.querySelectorAll('.icon-opt span').forEach(s => s.classList.remove('selected'));
+    r.nextElementSibling.classList.add('selected');
+  });
+});
+document.querySelector('.icon-opt input:checked')?.nextElementSibling.classList.add('selected');
+</script>
+{% endblock %}
