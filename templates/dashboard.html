@@ -8,7 +8,16 @@
   <div class="dash-header">
     <div>
       <h1 class="dash-title">أهلاً، {{ user.username }} 👋</h1>
-      <p class="dash-sub">{{ month_name }} {{ year }} — {{ user.student_type }}</p>
+      <div style="display:flex; align-items:center; gap:.75rem; flex-wrap:wrap; margin-top:.3rem;">
+        <span class="dash-sub">{{ month_name }} {{ year }} — {{ user.student_type }}</span>
+        {% if smart.days_until_reward == 0 %}
+          <span class="reward-chip today">🎉 اليوم يوم المكافأة!</span>
+        {% elif smart.days_until_reward is not none and smart.days_until_reward <= 5 %}
+          <span class="reward-chip soon">⏳ المكافأة بعد {{ smart.days_until_reward }} أيام</span>
+        {% elif smart.days_until_reward is not none %}
+          <span class="reward-chip">📅 المكافأة بعد {{ smart.days_until_reward }} يوم</span>
+        {% endif %}
+      </div>
     </div>
     <a href="{{ url_for('add_transaction') }}" class="btn btn-primary">➕ مصروف جديد</a>
   </div>

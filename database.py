@@ -25,6 +25,8 @@ def init_db():
             password_hash TEXT NOT NULL,
             student_type TEXT NOT NULL DEFAULT 'مع أهل',
             monthly_reward REAL NOT NULL DEFAULT 990,
+            reward_day INTEGER NOT NULL DEFAULT 25,
+            avatar TEXT,
             created_at TEXT NOT NULL DEFAULT (datetime('now'))
         );
 
@@ -90,6 +92,14 @@ def init_db():
         );
     """)
 
+    # Migrate existing users table (add new columns if missing)
+    existing_cols = [row[1] for row in cur.execute("PRAGMA table_info(users)").fetchall()]
+    if 'reward_day' not in existing_cols:
+        cur.execute("ALTER TABLE users ADD COLUMN reward_day INTEGER NOT NULL DEFAULT 25")
+    if 'avatar' not in existing_cols:
+        cur.execute("ALTER TABLE users ADD COLUMN avatar TEXT")
+    conn.commit()
+
     # Seed default categories if empty
     cur.execute("SELECT COUNT(*) FROM categories")
     if cur.fetchone()[0] == 0:
@@ -124,12 +134,12 @@ def verify_password(password: str, hashed: str) -> bool:
 
 # ─── users ──────────────────────────────────────────────────────────────────
 
-def create_user(username, email, password, student_type, monthly_reward=990):
+def create_user(username, email, password, student_type, monthly_reward=990, reward_day=25):
     conn = get_db()
     try:
         conn.execute(
-            "INSERT INTO users (username, email, password_hash, student_type, monthly_reward) VALUES (?,?,?,?,?)",
-            (username, email, hash_password(password), student_type, monthly_reward)
+            "INSERT INTO users (username, email, password_hash, student_type, monthly_reward, reward_day) VALUES (?,?,?,?,?,?)",
+            (username, email, hash_password(password), student_type, monthly_reward, reward_day)
         )
         conn.commit()
         return True, "تم إنشاء الحساب بنجاح"
@@ -153,6 +163,34 @@ def get_user_by_id(user_id):
     user = conn.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
     conn.close()
     return user
+
+
+def update_user(user_id, username=None, email=None, password=None,
+                student_type=None, monthly_reward=None, reward_day=None, avatar=None):
+    conn = get_db()
+    try:
+        if username:
+            conn.execute("UPDATE users SET username=? WHERE id=?", (username, user_id))
+        if email:
+            conn.execute("UPDATE users SET email=? WHERE id=?", (email, user_id))
+        if password:
+            conn.execute("UPDATE users SET password_hash=? WHERE id=?", (hash_password(password), user_id))
+        if student_type:
+            conn.execute("UPDATE users SET student_type=? WHERE id=?", (student_type, user_id))
+        if monthly_reward is not None:
+            conn.execute("UPDATE users SET monthly_reward=? WHERE id=?", (monthly_reward, user_id))
+        if reward_day is not None:
+            conn.execute("UPDATE users SET reward_day=? WHERE id=?", (reward_day, user_id))
+        if avatar is not None:
+            conn.execute("UPDATE users SET avatar=? WHERE id=?", (avatar, user_id))
+        conn.commit()
+        return True, "تم التحديث بنجاح"
+    except sqlite3.IntegrityError as e:
+        if 'username' in str(e):
+            return False, "اسم المستخدم مستخدم من قبل"
+        return False, "البريد الإلكتروني مستخدم من قبل"
+    finally:
+        conn.close()
 
 
 # ─── categories ─────────────────────────────────────────────────────────────

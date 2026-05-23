@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify, flash
 from datetime import datetime, date
 import calendar
+import base64
 import database as db
 
 app = Flask(__name__)
@@ -21,7 +22,7 @@ def current_user():
     return db.get_user_by_id(session['user_id'])
 
 
-def get_smart_data(user_id, month, year, total_spent, monthly_reward):
+def get_smart_data(user_id, month, year, total_spent, monthly_reward, reward_day=25):
     today = date.today()
     days_in_month = calendar.monthrange(year, month)[1]
 
@@ -35,13 +36,27 @@ def get_smart_data(user_id, month, year, total_spent, monthly_reward):
     predicted_total = daily_rate * days_in_month
     remaining = monthly_reward - total_spent
 
-    # Days until money runs out
     days_until_empty = int(remaining / daily_rate) if daily_rate > 0 else 999
 
-    # Danger alert: spent 60%+ in less than 40% of the month
     spent_pct = (total_spent / monthly_reward * 100) if monthly_reward > 0 else 0
     time_pct = (days_passed / days_in_month * 100)
     danger = spent_pct >= 60 and time_pct < 40
+
+    # Days until next reward
+    reward_day_clamped = min(reward_day, days_in_month)
+    if today.month == month and today.year == year:
+        if today.day < reward_day_clamped:
+            days_until_reward = reward_day_clamped - today.day
+        elif today.day == reward_day_clamped:
+            days_until_reward = 0
+        else:
+            nm = month + 1 if month < 12 else 1
+            ny = year if month < 12 else year + 1
+            next_days = calendar.monthrange(ny, nm)[1]
+            next_rd = min(reward_day, next_days)
+            days_until_reward = (date(ny, nm, next_rd) - today).days
+    else:
+        days_until_reward = None
 
     return {
         'days_passed': days_passed,
@@ -54,6 +69,8 @@ def get_smart_data(user_id, month, year, total_spent, monthly_reward):
         'time_pct': round(time_pct, 1),
         'danger': danger,
         'remaining': round(remaining, 1),
+        'days_until_reward': days_until_reward,
+        'reward_day': reward_day_clamped,
     }
 
 
@@ -88,7 +105,9 @@ def register():
             flash('كلمة المرور يجب أن تكون 6 أحرف على الأقل', 'error')
             return render_template('register.html')
 
-        success, msg = db.create_user(username, email, password, student_type, monthly_reward)
+        reward_day = int(request.form.get('reward_day', 25))
+        reward_day = max(1, min(28, reward_day))
+        success, msg = db.create_user(username, email, password, student_type, monthly_reward, reward_day)
         if success:
             user = db.get_user_by_email(email)
             session['user_id'] = user['id']
@@ -134,7 +153,7 @@ def dashboard():
     spending_by_cat = db.get_monthly_spending_by_category(user['id'], month, year)
     achievements = db.get_achievements(user['id'])
 
-    smart = get_smart_data(user['id'], month, year, total_spent, user['monthly_reward'])
+    smart = get_smart_data(user['id'], month, year, total_spent, user['monthly_reward'], user['reward_day'])
 
     db.check_and_grant_achievements(user['id'], month, year)
 
@@ -244,6 +263,85 @@ def goals():
         goals_data.append({**dict(g), 'pct': pct, 'remaining': round(remaining, 1), 'months_needed': months_needed})
 
     return render_template('goals.html', user=user, goals=goals_data)
+
+
+# ─── Profile ──────────────────────────────────────────────────────────────────
+
+@app.route('/profile', methods=['GET', 'POST'])
+@login_required
+def profile():
+    user = current_user()
+    if request.method == 'POST':
+        action = request.form.get('action')
+
+        if action == 'update_info':
+            username = request.form.get('username', '').strip()
+            email = request.form.get('email', '').strip().lower()
+            student_type = request.form.get('student_type', '')
+            monthly_reward = request.form.get('monthly_reward', '')
+            reward_day = request.form.get('reward_day', '')
+
+            kwargs = {}
+            if username and username != user['username']:
+                kwargs['username'] = username
+            if email and email != user['email']:
+                kwargs['email'] = email
+            if student_type:
+                kwargs['student_type'] = student_type
+            if monthly_reward:
+                try:
+                    kwargs['monthly_reward'] = float(monthly_reward)
+                except ValueError:
+                    pass
+            if reward_day:
+                try:
+                    kwargs['reward_day'] = max(1, min(28, int(reward_day)))
+                except ValueError:
+                    pass
+
+            if kwargs:
+                ok, msg = db.update_user(user['id'], **kwargs)
+                flash(msg, 'success' if ok else 'error')
+            else:
+                flash('لا توجد تغييرات', 'error')
+
+        elif action == 'update_password':
+            current_pw = request.form.get('current_password', '')
+            new_pw = request.form.get('new_password', '')
+            confirm_pw = request.form.get('confirm_password', '')
+
+            if not db.verify_password(current_pw, user['password_hash']):
+                flash('كلمة المرور الحالية غير صحيحة', 'error')
+            elif len(new_pw) < 6:
+                flash('كلمة المرور الجديدة يجب أن تكون 6 أحرف على الأقل', 'error')
+            elif new_pw != confirm_pw:
+                flash('كلمتا المرور الجديدتان غير متطابقتين', 'error')
+            else:
+                db.update_user(user['id'], password=new_pw)
+                flash('تم تغيير كلمة المرور بنجاح ✅', 'success')
+
+        elif action == 'update_avatar':
+            file = request.files.get('avatar_file')
+            if file and file.filename:
+                allowed = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+                ext = file.filename.rsplit('.', 1)[-1].lower()
+                if ext not in allowed:
+                    flash('نوع الملف غير مدعوم. استخدم PNG أو JPG', 'error')
+                else:
+                    data = file.read()
+                    if len(data) > 2 * 1024 * 1024:
+                        flash('حجم الصورة كبير جداً (الحد 2MB)', 'error')
+                    else:
+                        b64 = base64.b64encode(data).decode('utf-8')
+                        avatar_data = f"data:image/{ext};base64,{b64}"
+                        db.update_user(user['id'], avatar=avatar_data)
+                        flash('تم تحديث الصورة الشخصية ✅', 'success')
+            else:
+                flash('يرجى اختيار صورة', 'error')
+
+        return redirect(url_for('profile'))
+
+    return render_template('profile.html', user=user)
 
 
 # ─── Emergency Mode ───────────────────────────────────────────────────────────

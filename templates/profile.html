@@ -1,0 +1,190 @@
+{% extends 'base.html' %}
+{% block title %}ملفي الشخصي — مكافأتي{% endblock %}
+
+{% block content %}
+<div class="profile-page">
+
+  <!-- Avatar Header -->
+  <div class="avatar-section">
+    <div class="avatar-wrap">
+      {% if user.avatar %}
+        <img src="{{ user.avatar }}" alt="صورتي" class="avatar-img">
+      {% else %}
+        <div class="avatar-default">{{ user.username[0] }}</div>
+      {% endif %}
+      <button class="avatar-edit-btn" onclick="document.getElementById('avatarInput').click()" title="تغيير الصورة">✏️</button>
+    </div>
+    <div class="avatar-name">{{ user.username }}</div>
+    <div class="avatar-type">
+      {{ user.student_type }} •
+      <span class="reward-day-display">📅 المكافأة يوم {{ user.reward_day }}</span>
+    </div>
+    <!-- Hidden avatar upload form -->
+    <form method="POST" enctype="multipart/form-data" id="avatarForm">
+      <input type="hidden" name="action" value="update_avatar">
+      <input type="file" id="avatarInput" name="avatar_file" accept="image/*" style="display:none"
+             onchange="document.getElementById('avatarForm').submit()">
+    </form>
+  </div>
+
+  <!-- Tabs -->
+  <div class="profile-tabs">
+    <button class="tab-btn active" onclick="switchTab('info', this)">👤 المعلومات</button>
+    <button class="tab-btn" onclick="switchTab('password', this)">🔒 كلمة المرور</button>
+    <button class="tab-btn" onclick="switchTab('reward', this)">💰 إعدادات المكافأة</button>
+  </div>
+
+  <!-- Tab: Info -->
+  <div id="tab-info" class="tab-panel active">
+    <div class="card">
+      <h3 class="card-title">✏️ تعديل المعلومات الشخصية</h3>
+      <form method="POST" class="auth-form">
+        <input type="hidden" name="action" value="update_info">
+        <div class="form-row">
+          <div class="form-group">
+            <label>اسم المستخدم</label>
+            <div class="input-wrap">
+              <span class="input-icon">👤</span>
+              <input type="text" name="username" value="{{ user.username }}" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>البريد الإلكتروني</label>
+            <div class="input-wrap">
+              <span class="input-icon">📧</span>
+              <input type="email" name="email" value="{{ user.email }}" required>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>نمط حياتك الجامعي</label>
+          <div class="type-cards">
+            {% for t in ['مع أهل', 'سكن جامعي', 'بسيارة', 'يشتغل'] %}
+            {% set icons = {'مع أهل':'🏠','سكن جامعي':'🏢','بسيارة':'🚗','يشتغل':'💼'} %}
+            <label class="type-card {% if user.student_type == t %}selected{% endif %}">
+              <input type="radio" name="student_type" value="{{ t }}" {% if user.student_type == t %}checked{% endif %}>
+              <div class="type-card-body">
+                <span class="type-icon">{{ icons[t] }}</span>
+                <span class="type-name">{{ t }}</span>
+              </div>
+            </label>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">حفظ التغييرات ✅</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Tab: Password -->
+  <div id="tab-password" class="tab-panel">
+    <div class="card">
+      <h3 class="card-title">🔒 تغيير كلمة المرور</h3>
+      <form method="POST" class="auth-form">
+        <input type="hidden" name="action" value="update_password">
+        <div class="form-group">
+          <label>كلمة المرور الحالية</label>
+          <div class="input-wrap">
+            <span class="input-icon">🔒</span>
+            <input type="password" name="current_password" placeholder="••••••••" required>
+            <button type="button" class="toggle-pw" onclick="togglePw(this)">👁</button>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>كلمة المرور الجديدة</label>
+            <div class="input-wrap">
+              <span class="input-icon">🔑</span>
+              <input type="password" name="new_password" placeholder="6 أحرف على الأقل" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>تأكيد كلمة المرور الجديدة</label>
+            <div class="input-wrap">
+              <span class="input-icon">🔑</span>
+              <input type="password" name="confirm_password" placeholder="أعد الكتابة" required>
+            </div>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">تغيير كلمة المرور</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Tab: Reward Settings -->
+  <div id="tab-reward" class="tab-panel">
+    <div class="card">
+      <h3 class="card-title">💰 إعدادات المكافأة الشهرية</h3>
+      <form method="POST" class="auth-form">
+        <input type="hidden" name="action" value="update_info">
+        <div class="form-group">
+          <label>قيمة مكافأتك الشهرية (ريال)</label>
+          <div class="amount-wrap">
+            <input type="number" name="monthly_reward" class="amount-input"
+                   value="{{ user.monthly_reward | int }}" min="100" max="5000" step="10">
+            <span class="amount-unit">ر</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>يوم نزول المكافأة من الشهر</label>
+          <div class="reward-day-grid">
+            {% for d in range(1, 29) %}
+            <label class="day-opt">
+              <input type="radio" name="reward_day" value="{{ d }}"
+                     {% if user.reward_day == d %}checked{% endif %}>
+              <span>{{ d }}</span>
+            </label>
+            {% endfor %}
+          </div>
+          <small class="hint" style="margin-top:.5rem">اختر اليوم الذي تنزل فيه مكافأتك عادةً</small>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">حفظ الإعدادات ✅</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Danger Zone -->
+    <div class="card" style="margin-top:1rem; border-color:#fca5a5;">
+      <h3 class="card-title" style="color:var(--red)">⚠️ منطقة الخطر</h3>
+      <p style="color:var(--gray-600); margin-bottom:1rem; font-size:.9rem">هذه الإجراءات لا يمكن التراجع عنها.</p>
+      <a href="{{ url_for('logout') }}" class="btn btn-outline" style="border-color:var(--red);color:var(--red)">
+        🚪 تسجيل الخروج من الحساب
+      </a>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  btn.classList.add('active');
+}
+
+function togglePw(btn) {
+  const input = btn.previousElementSibling;
+  input.type = input.type === 'password' ? 'text' : 'password';
+  btn.textContent = input.type === 'password' ? '👁' : '🙈';
+}
+
+document.querySelectorAll('.type-card input').forEach(r => {
+  r.addEventListener('change', () => {
+    document.querySelectorAll('.type-card').forEach(c => c.classList.remove('selected'));
+    r.closest('.type-card').classList.add('selected');
+  });
+});
+</script>
+{% endblock %}

@@ -303,17 +303,29 @@ body {
 /* ─── Landing Page ────────────────────────────────── */
 .hero {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1.1fr 0.9fr;
   align-items: center;
-  gap: 3rem;
+  gap: 2.5rem;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 5rem 2rem 4rem;
+  padding: 4rem 2.5rem 3.5rem;
   position: relative;
 }
+/* Tablet: iPad portrait/landscape */
+@media (max-width: 1024px) and (min-width: 769px) {
+  .hero { gap: 1.75rem; padding: 3rem 2rem 2.5rem; }
+  .hero-title { font-size: clamp(1.6rem, 3vw, 2.2rem); }
+  .hero-sub { font-size: 1rem; }
+  .mock-card { padding: 1.25rem; max-width: 280px; }
+  .mock-amount { font-size: 1.5rem; }
+}
+/* Mobile */
 @media (max-width: 768px) {
-  .hero { grid-template-columns: 1fr; padding: 3rem 1.5rem 2rem; }
+  .hero { grid-template-columns: 1fr; padding: 3rem 1.5rem 2rem; text-align: center; }
   .hero-visual { display: none; }
+  .hero-actions { justify-content: center; }
+  .hero-stats { justify-content: center; }
+  .hero-sub { max-width: 100%; }
 }
 .hero-badge {
   display: inline-block;
@@ -706,3 +718,129 @@ body {
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: var(--gray-100); }
 ::-webkit-scrollbar-thumb { background: var(--gray-400); border-radius: 3px; }
+
+/* ─── Reward Day Picker ───────────────────────────── */
+.reward-day-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: .35rem;
+}
+@media (max-width: 480px) { .reward-day-grid { grid-template-columns: repeat(5, 1fr); } }
+.day-opt input { display: none; }
+.day-opt span {
+  display: flex; align-items: center; justify-content: center;
+  height: 38px;
+  border: 1.5px solid var(--gray-200);
+  border-radius: 8px;
+  font-size: .9rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--gray-50);
+  transition: all .15s;
+}
+.day-opt span:hover { border-color: var(--primary); background: var(--primary-light); color: var(--primary); }
+.day-opt input:checked + span { border-color: var(--primary); background: var(--primary); color: #fff; }
+
+/* ─── Profile Page ────────────────────────────────── */
+.profile-page { max-width: 720px; margin: 0 auto; padding: 1.5rem 1.25rem 3rem; }
+
+.avatar-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 2rem;
+  background: linear-gradient(135deg, var(--primary-light), var(--green-light));
+  border-radius: var(--radius-lg);
+  margin-bottom: 1.5rem;
+  border: 1px solid var(--gray-200);
+}
+.avatar-wrap { position: relative; }
+.avatar-img {
+  width: 100px; height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 4px solid var(--white);
+  box-shadow: var(--shadow);
+}
+.avatar-default {
+  width: 100px; height: 100px;
+  border-radius: 50%;
+  background: var(--primary);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 2.5rem;
+  border: 4px solid var(--white);
+  box-shadow: var(--shadow);
+  color: #fff;
+  font-weight: 800;
+}
+.avatar-edit-btn {
+  position: absolute;
+  bottom: 2px; left: 2px;
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  border: 2px solid #fff;
+  cursor: pointer;
+  font-size: .9rem;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .15s;
+}
+.avatar-edit-btn:hover { background: var(--primary-dark); }
+.avatar-name { font-size: 1.4rem; font-weight: 800; color: var(--gray-800); }
+.avatar-type { font-size: .9rem; color: var(--gray-600); }
+
+.profile-tabs {
+  display: flex;
+  gap: .5rem;
+  background: var(--gray-100);
+  border-radius: var(--radius-sm);
+  padding: .3rem;
+  margin-bottom: 1.5rem;
+}
+.tab-btn {
+  flex: 1;
+  padding: .6rem;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  font-family: 'Tajawal', sans-serif;
+  font-weight: 600;
+  font-size: .9rem;
+  cursor: pointer;
+  color: var(--gray-600);
+  transition: all .15s;
+}
+.tab-btn.active { background: var(--white); color: var(--primary); box-shadow: var(--shadow-sm); }
+
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+.reward-day-display {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  background: var(--primary-light);
+  color: var(--primary);
+  border-radius: 50px;
+  padding: .4rem 1rem;
+  font-weight: 700;
+  font-size: .95rem;
+  margin-top: .5rem;
+}
+
+/* Dashboard reward countdown chip */
+.reward-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  background: var(--primary-light);
+  color: var(--primary);
+  border-radius: 50px;
+  padding: .3rem .85rem;
+  font-size: .85rem;
+  font-weight: 700;
+}
+.reward-chip.soon { background: var(--orange-light); color: var(--orange); }
+.reward-chip.today { background: var(--green-light); color: var(--green); }

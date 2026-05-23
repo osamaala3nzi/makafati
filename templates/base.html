@@ -29,6 +29,9 @@
       <a href="{{ url_for('goals') }}" class="nav-link {% if request.endpoint == 'goals' %}active{% endif %}">
         <span>🎯</span> أهدافي
       </a>
+      <a href="{{ url_for('profile') }}" class="nav-link {% if request.endpoint == 'profile' %}active{% endif %}">
+        <span>👤</span> حسابي
+      </a>
       <a href="{{ url_for('logout') }}" class="nav-link logout-link">
         <span>🚪</span> خروج
       </a>
